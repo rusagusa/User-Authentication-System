@@ -6,7 +6,10 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
 require("dotenv").config();
+const path = require("path");
 
+// Serve static frontend files
+app.use(express.static(path.join(__dirname, "public")));
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -96,3 +99,4 @@ app.get("/dashboard", async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });
+
