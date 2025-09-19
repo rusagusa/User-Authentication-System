@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #f3f4f6;
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+    <div class="w-full max-w-sm p-8 bg-white rounded-xl shadow-2xl">
+        <div id="message-box" class="hidden mb-4 p-3 rounded-lg text-sm text-center"></div>
+        <h2 class="text-3xl font-bold text-center text-gray-800 mb-6">Login</h2>
+        <form id="loginForm" class="space-y-4">
+            <input type="email" id="email" placeholder="Email" required
+                   class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200">
+            <input type="password" id="password" placeholder="Password" required
+                   class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200">
+            <button type="submit"
+                    class="w-full py-3 px-4 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                Login
+            </button>
+        </form>
+        <p class="text-center text-gray-600 mt-4">
+            Don't have an account?
+            <a href="#" id="registerLink" class="text-blue-600 hover:text-blue-800 font-medium transition-colors duration-200">
+                Register
+            </a>
+        </p>
+    </div>
+
+    <script>
+        function showMessage(message, type = 'info') {
+            const messageBox = document.getElementById('message-box');
+            messageBox.textContent = message;
+            messageBox.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-green-100', 'text-green-700');
+            if (type === 'error') {
+                messageBox.classList.add('bg-red-100', 'text-red-700');
+            } else if (type === 'success') {
+                messageBox.classList.add('bg-green-100', 'text-green-700');
+            } else {
+                messageBox.classList.add('bg-gray-100', 'text-gray-700');
+            }
+            messageBox.classList.remove('hidden');
+        }
+
+        document.getElementById("loginForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            try {
+                const res = await fetch("http://localhost:5000/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        email: document.getElementById("email").value,
+                        password: document.getElementById("password").value
+                    })
+                });
+                const data = await res.json();
+                
+                if (data.token) {
+                    showMessage("Login successful! Redirecting...", 'success');
+                    localStorage.setItem("token", data.token);
+                    
+                    window.location.href = "dashboard.html";
+                } else {
+                    showMessage(data.message || "Login failed. Please check your credentials.", 'error');
+                }
+            } catch (error) {
+                console.error("Login error:", error);
+                showMessage("An unexpected error occurred. Please try again later.", 'error');
+            }
+        });
+
+        
+        document.getElementById("registerLink").addEventListener("click", (e) => {
+            e.preventDefault();
+            showMessage('info');
+            window.location.href = "register.html";
+        });
+    </script>
+</body>
+</html>

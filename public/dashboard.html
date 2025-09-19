@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #f3f4f6;
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+    <div class="w-full max-w-lg p-8 bg-white rounded-xl shadow-2xl text-center">
+        <div id="message-box" class="hidden mb-4 p-3 rounded-lg text-sm text-center"></div>
+        <h2 class="text-3xl font-bold text-gray-800 mb-6">Dashboard</h2>
+        <div class="space-y-4">
+            <button id="loadBtn"
+                    class="w-full py-3 px-4 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                Load Dashboard
+            </button>
+            <button id="logoutBtn"
+                    class="w-full py-3 px-4 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+                Logout
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Custom message box function to replace alert()
+        function showMessage(message, type = 'info') {
+            const messageBox = document.getElementById('message-box');
+            messageBox.textContent = message;
+            messageBox.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-green-100', 'text-green-700');
+            if (type === 'error') {
+                messageBox.classList.add('bg-red-100', 'text-red-700');
+            } else if (type === 'success') {
+                messageBox.classList.add('bg-green-100', 'text-green-700');
+            } else {
+                messageBox.classList.add('bg-gray-100', 'text-gray-700');
+            }
+            messageBox.classList.remove('hidden');
+        }
+
+        // Check for authentication token on page load
+        window.onload = function() {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                // If no token exists, redirect to login page
+                // This allows the back button to work
+                window.location.href = "login.html";
+            }
+        };
+
+        document.getElementById("loadBtn").addEventListener("click", async () => {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                showMessage("You are not logged in. Please log in to view the dashboard.", 'error');
+                return;
+            }
+            try {
+                const res = await fetch("http://localhost:5000/dashboard", {
+                    headers: { "Authorization": "Bearer " + token }
+                });
+                const data = await res.json();
+                showMessage(data.message || "Dashboard data loaded successfully!", 'success');
+            } catch (error) {
+                console.error("Dashboard data load error:", error);
+                showMessage("Failed to load dashboard data. Please log in again.", 'error');
+            }
+        });
+
+        document.getElementById("logoutBtn").addEventListener("click", () => {
+            localStorage.removeItem("token");
+            showMessage("Logged out successfully!", 'info');
+            
+            window.location.href = "login.html";
+        });
+    </script>
+</body>
+</html>
