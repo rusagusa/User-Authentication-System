@@ -12,29 +12,23 @@ const PORT = process.env.PORT || 5000;
 // Middleware
 app.use(cors());
 app.use(express.json());
-
-// ✅ Serve static frontend files from public/
 app.use(express.static(path.join(__dirname, "public")));
-
-// ✅ Default route (root)
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
-});
 
 // MySQL Connection
 let pool;
 (async function initDB() {
   try {
+    // Railway provides MYSQL_URL in the form:
+    // mysql://user:password@host:port/database
     pool = await mysql.createPool({
-      host: process.env.DB_HOST,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD, // make sure ENV key matches Railway variable
-      database: process.env.DB_NAME,
-      port: process.env.DB_PORT || 3306
+      uri: process.env.MYSQL_URL,
+      waitForConnections: true,
+      connectionLimit: 10,
+      queueLimit: 0
     });
     console.log("✅ MySQL Connected...");
   } catch (err) {
-    console.error("❌ Database connection failed:", err);
+    console.error("❌ MySQL connection failed:", err.message);
   }
 })();
 
@@ -76,11 +70,9 @@ app.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Invalid email or password" });
     }
 
-    const token = jwt.sign(
-      { id: user.id, email: user.email },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
+    const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, {
+      expiresIn: "1h"
+    });
 
     res.json({ message: "Login successful", token });
   } catch (err) {
@@ -105,7 +97,12 @@ app.get("/dashboard", async (req, res) => {
   }
 });
 
+// Root Route (serve index.html)
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
 // Start Server
 app.listen(PORT, () => {
-  console.log(`🚀 Server running at http://localhost:${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
